@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ניהול עסק" />
+  <meta name="theme-color" content="#b5651d" />
+  <title>✨ ניהול עסק</title>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a0f00 0%, #2e1a00 40%, #1a0f00 100%); min-height: 100vh; color: #fff3e0; direction: rtl; }
+    input, textarea, button, select { font-family: inherit; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .header { background: linear-gradient(90deg, #b5651d, #f4a030); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(181,101,29,0.5); position: sticky; top: 0; z-index: 100; }
+    .header-title { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .header-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+
+    .nav { display: flex; justify-content: center; gap: 6px; padding: 12px 10px 0; flex-wrap: wrap; }
+    .nav-btn { padding: 8px 13px; border-radius: 25px; border: none; background: rgba(255,255,255,0.08); color: #fff; font-weight: 400; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+    .nav-btn.active { background: linear-gradient(135deg, #b5651d, #f4a030); font-weight: 700; box-shadow: 0 4px 15px rgba(181,101,29,0.5); }
+
+    .content { padding: 14px 12px; max-width: 600px; margin: 0 auto; }
+
+    .card { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 14px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+    .card-title { font-size: 12px; color: #f4c07a; margin-bottom: 10px; font-weight: 600; }
+
+    .row { display: flex; gap: 10px; }
+    .field { flex: 1; display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+    .field label { font-size: 12px; color: #f4c07a; font-weight: 600; }
+    .field input, .field textarea { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 14px; outline: none; width: 100%; }
+    .field textarea { resize: vertical; }
+    .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,0.3); }
+
+    .work-type-btns { display: flex; gap: 10px; }
+    .wt-btn { flex: 1; padding: 12px; border-radius: 12px; border: 2px solid transparent; background: rgba(255,255,255,0.05); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+    .wt-btn.active-private { border-color: #f4a030; background: rgba(244,160,48,0.15); }
+    .wt-btn.active-company { border-color: #448aff; background: rgba(68,138,255,0.15); }
+
+    .services { display: flex; gap: 8px; flex-wrap: wrap; }
+    .svc-label { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 25px; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); cursor: pointer; font-weight: 400; transition: all 0.2s; user-select: none; font-size: 14px; }
+    .svc-label.checked { border-color: #f4a030; background: rgba(244,160,48,0.15); font-weight: 700; }
+    .svc-price-badge { font-size: 11px; color: #f4a030; font-weight: 800; }
+
+    .total-bar { background: rgba(181,101,29,0.2); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .total-bar span:first-child { color: #f4c07a; font-size: 13px; }
+    .total-bar span:last-child { font-weight: 800; font-size: 18px; color: #f4a030; }
+
+    .btn-primary { width: 100%; background: linear-gradient(135deg, #b5651d, #f4a030); border: none; border-radius: 14px; padding: 15px; color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 6px 25px rgba(181,101,29,0.5); margin-bottom: 10px; }
+    .btn-cancel { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 11px; color: #aaa; font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 10px; }
+
+    .success-bar { background: linear-gradient(135deg, #00c853, #69f0ae); color: #003300; padding: 12px 18px; border-radius: 12px; font-weight: 700; margin-bottom: 14px; text-align: center; }
+
+    .job-card { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 14px; position: relative; overflow: hidden; margin-bottom: 10px; }
+    .job-badge { position: absolute; top: 0; right: 0; padding: 4px 10px; border-radius: 0 16px 0 12px; font-size: 11px; font-weight: 700; }
+    .job-badge.private { background: linear-gradient(135deg, #b5651d, #f4a030); }
+    .job-badge.company { background: linear-gradient(135deg, #448aff, #82b1ff); }
+    .job-name { font-weight: 800; font-size: 15px; margin-top: 4px; }
+    .job-meta { color: #b0b0c0; font-size: 12px; margin-top: 3px; }
+    .job-price { font-weight: 800; font-size: 17px; color: #f4a030; }
+    .job-price-note { font-size: 11px; color: #aaa; }
+    .job-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag { background: rgba(181,101,29,0.25); border: 1px solid rgba(244,160,48,0.4); border-radius: 20px; padding: 3px 9px; font-size: 11px; font-weight: 600; }
+    .job-notes { margin-top: 6px; font-size: 12px; color: #b0b0c0; font-style: italic; }
+    .job-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .job-actions button { flex: 1; border-radius: 8px; padding: 8px; color: #fff; font-size: 13px; cursor: pointer; font-weight: 600; border: 1px solid; }
+    .btn-edit { background: rgba(181,101,29,0.2); border-color: rgba(181,101,29,0.4); }
+    .btn-del { background: rgba(198,40,40,0.2); border-color: rgba(198,40,40,0.4); }
+
+    /* Summary */
+    .summary-card { background: rgba(255,255,255,0.06); border-radius: 18px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+    .summary-month { font-weight: 800; font-size: 17px; margin-bottom: 12px; }
+    .summary-boxes { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .summary-box { flex: 1; min-width: 110px; border-radius: 12px; padding: 10px; }
+    .summary-box-label { font-size: 11px; margin-bottom: 4px; }
+    .summary-box-amount { font-weight: 800; font-size: 17px; }
+    .summary-box-count { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .summary-lashes-row { background: rgba(255,224,130,0.08); border-radius: 12px; padding: 10px; border: 1px dashed rgba(255,224,130,0.3); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .summary-total-box { background: linear-gradient(135deg, rgba(181,101,29,0.3), rgba(244,160,48,0.15)); border-radius: 12px; padding: 12px 14px; border: 1px solid rgba(244,160,48,0.2); }
+    .summary-total-row { display: flex; justify-content: space-between; align-items: center; }
+    .summary-total-sub { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; margin-top: 8px; display: flex; justify-content: space-between; }
+
+    /* Export buttons */
+    .export-btns { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-excel { flex: 1; background: rgba(33,150,83,0.25); border: 1px solid rgba(33,150,83,0.5); border-radius: 10px; padding: 9px; color: #69f0ae; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-pdf { flex: 1; background: rgba(198,40,40,0.2); border: 1px solid rgba(198,40,40,0.4); border-radius: 10px; padding: 9px; color: #ff8a80; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    /* Year summary */
+    .year-header { background: linear-gradient(135deg, #b5651d, #f4a030); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .year-title { font-size: 20px; font-weight: 900; }
+    .year-total { font-size: 24px; font-weight: 900; }
+    .year-boxes { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .year-box { flex: 1; min-width: 100px; border-radius: 12px; padding: 12px; }
+
+    /* Year selector */
+    .year-selector { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .year-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(244,160,48,0.3); background: rgba(244,160,48,0.08); color: #f4c07a; font-size: 13px; cursor: pointer; font-weight: 600; }
+    .year-btn.active { background: linear-gradient(135deg, #b5651d, #f4a030); color: #fff; border-color: transparent; box-shadow: 0 3px 12px rgba(181,101,29,0.4); }
+
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-box { border-radius: 20px; padding: 24px 20px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align: center; }
+    .modal-lashes { background: linear-gradient(145deg, #2e1a00, #3d2200); border: 1px solid rgba(244,160,48,0.4); }
+    .modal-delete { background: linear-gradient(145deg, #1a0000, #2d0000); border: 1px solid rgba(198,40,40,0.4); }
+    .modal-icon { font-size: 36px; margin-bottom: 8px; }
+    .modal-title { font-size: 19px; font-weight: 800; margin-bottom: 6px; }
+    .modal-sub { font-size: 13px; color: #f4c07a; margin-bottom: 18px; }
+    .modal-sub-red { font-size: 13px; color: #ffaaaa; margin-bottom: 18px; }
+    .modal-input { width: 100%; background: rgba(255,255,255,0.1); border: 2px solid rgba(244,160,48,0.5); border-radius: 12px; padding: 13px; color: #fff; font-size: 22px; font-weight: 700; text-align: center; outline: none; margin-bottom: 14px; }
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-btn-cancel { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: #aaa; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .modal-btn-confirm-gold { flex: 1; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, #b5651d, #f4a030); color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .modal-btn-confirm-red { flex: 1; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, #c62828, #ef5350); color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; }
+
+    .empty { text-align: center; padding: 50px 0; opacity: 0.5; }
+
+    /* Filters */
+    .filter-bar { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+    .filter-search { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 10px; }
+    .filter-search::placeholder { color: rgba(255,255,255,0.35); }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .filter-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .filter-btn.active { background: linear-gradient(135deg, #b5651d, #f4a030); border-color: transparent; font-weight: 700; box-shadow: 0 3px 10px rgba(181,101,29,0.4); }
+    .filter-btn.active-company { background: linear-gradient(135deg, #1565c0, #448aff); border-color: transparent; font-weight: 700; }
+    .sort-btn { margin-right: auto; padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #f4c07a; font-size: 12px; cursor: pointer; font-weight: 600; }
+    .clickable-box { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+    .clickable-box:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .clickable-box:active { transform: scale(0.97); }
+    .drill-hint { font-size: 10px; opacity: 0.6; margin-top: 3px; }
+    .back-btn { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 14px; color: #f4c07a; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 12px; width: 100%; }
+    .active-filter-bar { background: rgba(181,101,29,0.2); border: 1px solid rgba(244,160,48,0.3); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #f4c07a; display: flex; justify-content: space-between; align-items: center; }
+    .results-count { font-size: 11px; color: #aaa; margin-top: 8px; }
+    .empty-icon { font-size: 50px; }
+    .empty-text { margin-top: 12px; }
+
+    /* Backup */
+    .backup-bar { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 14px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+    .backup-title { font-size: 13px; color: #f4c07a; font-weight: 700; margin-bottom: 10px; }
+    .backup-btns { display: flex; gap: 8px; }
+    .btn-backup { flex: 1; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, #b5651d, #f4a030); color: #fff; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 3px 12px rgba(181,101,29,0.4); }
+    .btn-restore { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(244,160,48,0.4); background: rgba(244,160,48,0.1); color: #f4c07a; font-weight: 800; font-size: 13px; cursor: pointer; }
+    .backup-info { font-size: 11px; color: #aaa; margin-top: 8px; text-align: center; }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+      .print-area { color: black; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Lashes Modal -->
+<div class="modal-overlay" id="lashesModal" style="display:none">
+  <div class="modal-box modal-lashes">
+    <div class="modal-icon">✨</div>
+    <div class="modal-title">תוספת ריסים</div>
+    <div class="modal-sub">הכנס את הסכום עבור הריסים</div>
+    <input class="modal-input" type="number" id="lashesModalInput" placeholder="סכום ₪" />
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="cancelLashes()">ביטול</button>
+      <button class="modal-btn-confirm-gold" onclick="confirmLashes()">אישור ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal" style="display:none">
+  <div class="modal-box modal-delete">
+    <div class="modal-icon">🗑️</div>
+    <div class="modal-title">למחוק רשומה?</div>
+    <div class="modal-sub-red">פעולה זו לא ניתנת לביטול</div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="cancelDelete()">ביטול</button>
+      <button class="modal-btn-confirm-red" onclick="confirmDelete()">מחק ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header no-print">
+  <div>
+    <div class="header-title">✨ ניהול עסק</div>
+    <div class="header-sub">מעקב עבודות ולקוחות</div>
+  </div>
+  <div style="font-size:26px">💄</div>
+</div>
+
+<!-- Nav -->
+<div class="nav no-print">
+  <button class="nav-btn active" id="nav-add" onclick="setView('add')">➕ הוספה</button>
+  <button class="nav-btn" id="nav-list" onclick="setView('list')">📋 רשומות</button>
+  <button class="nav-btn" id="nav-summary" onclick="setView('summary')">📊 חודשי</button>
+  <button class="nav-btn" id="nav-yearly" onclick="setView('yearly')">📈 שנתי</button>
+  <button class="nav-btn" id="nav-backup" onclick="setView('backup')">💾 גיבוי</button>
+</div>
+
+<!-- Content -->
+<div class="content">
+  <div id="successBar" class="success-bar" style="display:none"></div>
+
+  <!-- ADD VIEW -->
+  <div id="view-add">
+    <div class="card">
+      <div class="card-title">סוג עבודה</div>
+      <div class="work-type-btns">
+        <button class="wt-btn active-private" id="wt-private" onclick="setWorkType('private')">👩 פרטית</button>
+        <button class="wt-btn" id="wt-company" onclick="setWorkType('company')">🏢 חברה</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="field"><label>שם לקוח *</label><input type="text" id="f-clientName" placeholder="שם מלא" /></div>
+        <div class="field"><label>תאריך *</label><input type="date" id="f-date" /></div>
+      </div>
+      <div class="field"><label>מיקום</label><input type="text" id="f-location" placeholder="עיר / כתובת" /></div>
+    </div>
+    <div class="card">
+      <div class="card-title">שירותים</div>
+      <div class="services">
+        <label class="svc-label" id="svc-makeup" onclick="toggleService('makeup')">💄 איפור</label>
+        <label class="svc-label" id="svc-hair" onclick="toggleService('hair')">💇 שיער</label>
+        <label class="svc-label" id="svc-lashes" onclick="toggleService('lashes')">✨ ריסים <span class="svc-price-badge" id="lashes-badge" style="display:none"></span></label>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">תשלום</div>
+      <div class="row">
+        <div class="field"><label>מחיר ששולם (₪) *</label><input type="number" id="f-price" placeholder="0" oninput="updateTotal()" /></div>
+        <div class="field"><label>תוספת נסיעות (₪)</label><input type="number" id="f-travel" placeholder="0" oninput="updateTotal()" /></div>
+      </div>
+      <div class="total-bar" id="totalBar" style="display:none"><span>סה"כ</span><span id="totalAmount">₪0</span></div>
+    </div>
+    <div class="card">
+      <div class="field"><label>הערות</label><textarea id="f-notes" placeholder="פרטים נוספים..." rows="2"></textarea></div>
+    </div>
+    <button class="btn-primary" id="submitBtn" onclick="handleSubmit()">✅ הוסף רשומה</button>
+    <button class="btn-cancel" id="cancelEditBtn" style="display:none" onclick="cancelEdit()">ביטול עריכה</button>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="view-list" style="display:none">
+    <div class="filter-bar">
+      <input class="filter-search" type="text" id="searchInput" placeholder="🔍 חיפוש לפי שם לקוח..." oninput="renderList()" />
+      <div class="filter-row">
+        <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">הכל</button>
+        <button class="filter-btn" id="filter-private" onclick="setFilter('private')">👩 פרטי</button>
+        <button class="filter-btn" id="filter-company" onclick="setFilter('company')">🏢 חברה</button>
+        <button class="sort-btn" id="sortBtn" onclick="toggleSort()">📅 חדש לישן ▼</button>
+      </div>
+      <div class="results-count" id="resultsCount"></div>
+    </div>
+    <div id="jobsList"></div>
+  </div>
+
+  <!-- SUMMARY VIEW -->
+  <div id="view-summary" style="display:none"><div id="summaryContent"></div></div>
+
+  <!-- YEARLY VIEW -->
+  <div id="view-yearly" style="display:none"><div id="yearlyContent"></div></div>
+
+  <!-- BACKUP VIEW -->
+  <div id="view-backup" style="display:none">
+
+    <!-- Export -->
+    <div class="backup-bar">
+      <div class="backup-title">📥 שמירה (ייצוא)</div>
+      <p style="font-size:12px;color:#ccc;margin-bottom:12px;line-height:1.6">הורד את כל הרשומות לקובץ ושמור אותו בגוגל דרייב או בוואטסאפ לעצמך</p>
+      <div class="backup-btns">
+        <button class="btn-backup" onclick="exportBackup()">💾 הורד לטלפון</button>
+        <button class="btn-backup" style="background:linear-gradient(135deg,#1565c0,#1976d2);box-shadow:0 3px 12px rgba(21,101,192,0.4)" onclick="exportAndOpenDrive()">☁️ גוגל דרייב</button>
+      </div>
+      <div class="backup-info" id="backupInfo">סה"כ <span id="backupCount">0</span> רשומות שמורות</div>
+    </div>
+
+    <!-- Import -->
+    <div class="backup-bar">
+      <div class="backup-title">📤 שחזור (ייבוא)</div>
+      <p style="font-size:12px;color:#ccc;margin-bottom:12px;line-height:1.6">טען קובץ גיבוי קיים — הרשומות יתווספו לאפליקציה</p>
+      <button class="btn-restore" style="width:100%" onclick="document.getElementById('importFile').click()">📂 בחר קובץ גיבוי</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)" />
+    </div>
+
+    <!-- Auto backup reminder -->
+    <div class="backup-bar">
+      <div class="backup-title">⏰ תזכורת גיבוי שבועית</div>
+      <p style="font-size:12px;color:#ccc;margin-bottom:12px;line-height:1.6">האפליקציה תזכיר לך לגבות אחת לשבוע כשתיכנסי</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <label style="font-size:12px;color:#f4c07a;flex:1">תזכורת כל:</label>
+        <select id="autoBackupDays" onchange="saveAutoBackupSetting()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(244,160,48,0.3);border-radius:8px;padding:7px 10px;color:#fff;font-size:13px;outline:none">
+          <option value="0">כבוי</option>
+          <option value="1">יום</option>
+          <option value="3">3 ימים</option>
+          <option value="7">שבוע</option>
+          <option value="14">שבועיים</option>
+          <option value="30">חודש</option>
+        </select>
+      </div>
+      <div id="lastBackupInfo" style="font-size:11px;color:#aaa;text-align:center"></div>
+    </div>
+
+    <!-- Reset -->
+    <div class="backup-bar">
+      <div class="backup-title" style="color:#ff8a80">⚠️ איפוס נתונים</div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:12px">מחיקת כל הרשומות — פעולה לא הפיכה!</p>
+      <button onclick="resetAllData()" style="width:100%;padding:11px;border-radius:12px;border:1px solid rgba(198,40,40,0.4);background:rgba(198,40,40,0.15);color:#ff8a80;font-weight:700;font-size:13px;cursor:pointer;">🗑️ מחק את כל הנתונים</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'beauty_jobs_v2';
+let jobs = [];
+let currentView = 'add';
+let editId = null;
+let deleteTargetId = null;
+let filterType = 'all';
+let sortOrder = 'desc'; // desc = newest first, asc = oldest first
+let filterDateRange = null; // { type: 'month'|'year', value: '2024-03'|'2024', label: 'מרץ 2024' }
+let form = { clientName:'', location:'', workType:'private', makeup:false, hair:false, lashes:false, lashesPrice:'', travel:'', price:'', date:today(), notes:'' };
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+try { const s = localStorage.getItem(STORAGE_KEY); if (s) jobs = JSON.parse(s); } catch(e) {}
+
+function saveJobs() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs)); } catch(e) {} }
+
+function setView(v) {
+  currentView = v;
+  ['add','list','summary','yearly','backup'].forEach(id => {
+    document.getElementById('view-'+id).style.display = id===v?'block':'none';
+    const btn = document.getElementById('nav-'+id);
+    if(btn) btn.classList.toggle('active', id===v);
+  });
+  if(v==='list') renderList();
+  if(v==='summary') renderSummary();
+  if(v==='yearly') renderYearly();
+  if(v==='backup') updateBackupInfo();
+  updateNavLabel();
+}
+
+function updateNavLabel() {
+  document.getElementById('nav-add').textContent = editId!==null?'✏️ עריכה':'➕ הוספה';
+  document.getElementById('nav-list').textContent = `📋 רשומות (${jobs.length})`;
+}
+
+function setWorkType(wt) {
+  form.workType = wt;
+  document.getElementById('wt-private').className = 'wt-btn'+(wt==='private'?' active-private':'');
+  document.getElementById('wt-company').className = 'wt-btn'+(wt==='company'?' active-company':'');
+}
+
+function toggleService(svc) {
+  if(svc==='lashes') {
+    if(!form.lashes) {
+      document.getElementById('lashesModalInput').value = form.lashesPrice||'';
+      document.getElementById('lashesModal').style.display = 'flex';
+      setTimeout(()=>document.getElementById('lashesModalInput').focus(),100);
+    } else {
+      form.lashes=false; form.lashesPrice='';
+      document.getElementById('svc-lashes').classList.remove('checked');
+      document.getElementById('lashes-badge').style.display='none';
+      updateTotal();
+    }
+    return;
+  }
+  form[svc] = !form[svc];
+  document.getElementById('svc-'+svc).classList.toggle('checked', form[svc]);
+}
+
+function confirmLashes() {
+  const val = document.getElementById('lashesModalInput').value;
+  form.lashes=true; form.lashesPrice=val;
+  document.getElementById('lashesModal').style.display='none';
+  document.getElementById('svc-lashes').classList.add('checked');
+  const badge = document.getElementById('lashes-badge');
+  if(val){badge.textContent='₪'+val;badge.style.display='inline';}else badge.style.display='none';
+  updateTotal();
+}
+function cancelLashes() { document.getElementById('lashesModal').style.display='none'; }
+
+function updateTotal() {
+  const price = parseFloat(document.getElementById('f-price').value)||0;
+  const travel = parseFloat(document.getElementById('f-travel').value)||0;
+  const lashes = parseFloat(form.lashesPrice)||0;
+  const total = price+travel+lashes;
+  const bar = document.getElementById('totalBar');
+  if(total>0){bar.style.display='flex';document.getElementById('totalAmount').textContent='₪'+total.toFixed(0);}
+  else bar.style.display='none';
+}
+
+function handleSubmit() {
+  const clientName = document.getElementById('f-clientName').value.trim();
+  const price = document.getElementById('f-price').value;
+  const date = document.getElementById('f-date').value;
+  if(!clientName||!price||!date){alert('נא למלא שם לקוח, מחיר ותאריך');return;}
+  const job = { id:editId!==null?editId:Date.now(), clientName, location:document.getElementById('f-location').value.trim(), workType:form.workType, makeup:form.makeup, hair:form.hair, lashes:form.lashes, lashesPrice:form.lashesPrice, price, travel:document.getElementById('f-travel').value, date, notes:document.getElementById('f-notes').value.trim() };
+  if(editId!==null){jobs=jobs.map(j=>j.id===editId?job:j);editId=null;showSuccess('הרשומה עודכנה בהצלחה ✓');}
+  else{jobs=[job,...jobs];showSuccess('הרשומה נשמרה בהצלחה ✓');}
+  saveJobs(); resetForm(); updateNavLabel();
+}
+
+function resetForm() {
+  form={clientName:'',location:'',workType:'private',makeup:false,hair:false,lashes:false,lashesPrice:'',travel:'',price:'',date:today(),notes:''};
+  ['f-clientName','f-location','f-price','f-travel','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-date').value=today();
+  ['makeup','hair','lashes'].forEach(s=>document.getElementById('svc-'+s).classList.remove('checked'));
+  document.getElementById('lashes-badge').style.display='none';
+  setWorkType('private');
+  document.getElementById('totalBar').style.display='none';
+  document.getElementById('submitBtn').textContent='✅ הוסף רשומה';
+  document.getElementById('cancelEditBtn').style.display='none';
+}
+
+function cancelEdit(){editId=null;resetForm();updateNavLabel();}
+
+function showSuccess(msg){const bar=document.getElementById('successBar');bar.textContent=msg;bar.style.display='block';setTimeout(()=>bar.style.display='none',3000);}
+
+function startEdit(id) {
+  const job=jobs.find(j=>j.id===id); if(!job)return;
+  editId=id; form={...job};
+  document.getElementById('f-clientName').value=job.clientName;
+  document.getElementById('f-location').value=job.location||'';
+  document.getElementById('f-price').value=job.price;
+  document.getElementById('f-travel').value=job.travel||'';
+  document.getElementById('f-date').value=job.date;
+  document.getElementById('f-notes').value=job.notes||'';
+  setWorkType(job.workType);
+  ['makeup','hair','lashes'].forEach(s=>document.getElementById('svc-'+s).classList.toggle('checked',!!job[s]));
+  if(job.lashes&&job.lashesPrice){const badge=document.getElementById('lashes-badge');badge.textContent='₪'+job.lashesPrice;badge.style.display='inline';}
+  document.getElementById('submitBtn').textContent='💾 שמור שינויים';
+  document.getElementById('cancelEditBtn').style.display='block';
+  updateTotal(); setView('add'); updateNavLabel(); window.scrollTo(0,0);
+}
+
+function askDelete(id){deleteTargetId=id;document.getElementById('deleteModal').style.display='flex';}
+function cancelDelete(){document.getElementById('deleteModal').style.display='none';deleteTargetId=null;}
+function confirmDelete(){jobs=jobs.filter(j=>j.id!==deleteTargetId);saveJobs();deleteTargetId=null;document.getElementById('deleteModal').style.display='none';renderList();updateNavLabel();}
+
+function totalPrice(job){return(parseFloat(job.price)||0)+(parseFloat(job.travel)||0)+(parseFloat(job.lashesPrice)||0);}
+
+function drillDown(dateType, dateValue, workType, label) {
+  filterDateRange = { type: dateType, value: dateValue, label };
+  filterType = workType;
+  sortOrder = 'asc';
+  // Reset search
+  const si = document.getElementById('searchInput');
+  if(si) si.value = '';
+  setView('list');
+  // Update sort button text
+  setTimeout(() => {
+    const sb = document.getElementById('sortBtn');
+    if(sb) sb.textContent = '📅 ישן לחדש ▲';
+  }, 50);
+}
+
+function clearDrillDown() {
+  filterDateRange = null;
+  filterType = 'all';
+  renderList();
+}
+
+function setFilter(f) {
+  filterType = f;
+  ['all','private','company'].forEach(id => {
+    const btn = document.getElementById('filter-'+id);
+    btn.className = 'filter-btn' + (id===f ? (id==='company'?' filter-btn active-company':' active') : '');
+  });
+  renderList();
+}
+
+function toggleSort() {
+  sortOrder = sortOrder==='desc' ? 'asc' : 'desc';
+  document.getElementById('sortBtn').textContent = sortOrder==='desc' ? '📅 חדש לישן ▼' : '📅 ישן לחדש ▲';
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById('jobsList');
+  const search = (document.getElementById('searchInput')?.value||'').trim().toLowerCase();
+
+  // Show/hide back button and active filter bar
+  const filterBar = document.querySelector('.filter-bar');
+  let backBtnEl = document.getElementById('drillBackBtn');
+  let activeBarEl = document.getElementById('activeFilterBar');
+
+  if(filterDateRange) {
+    if(!backBtnEl) {
+      backBtnEl = document.createElement('button');
+      backBtnEl.id = 'drillBackBtn';
+      backBtnEl.className = 'back-btn no-print';
+      backBtnEl.onclick = clearDrillDown;
+      filterBar.parentNode.insertBefore(backBtnEl, filterBar);
+    }
+    backBtnEl.innerHTML = '← חזור לכל הרשומות';
+    backBtnEl.style.display = 'flex';
+
+    if(!activeBarEl) {
+      activeBarEl = document.createElement('div');
+      activeBarEl.id = 'activeFilterBar';
+      activeBarEl.className = 'active-filter-bar no-print';
+      filterBar.parentNode.insertBefore(activeBarEl, filterBar);
+    }
+    const typeLabel = filterType==='private'?'👩 פרטיות':filterType==='company'?'🏢 חברה':'הכל';
+    activeBarEl.innerHTML = `<span>📅 ${filterDateRange.label} — ${typeLabel}</span><span style="opacity:0.6;font-size:11px">מסונן</span>`;
+    activeBarEl.style.display = 'flex';
+  } else {
+    if(backBtnEl) backBtnEl.style.display = 'none';
+    if(activeBarEl) activeBarEl.style.display = 'none';
+  }
+
+  if(jobs.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">אין רשומות עדיין</div></div>';document.getElementById('resultsCount').textContent='';return;}
+
+  let filtered = jobs.filter(job => {
+    const matchType = filterType==='all' || job.workType===filterType;
+    const matchSearch = !search || job.clientName.toLowerCase().includes(search) || (job.location||'').toLowerCase().includes(search);
+    const matchDate = !filterDateRange || (
+      filterDateRange.type==='month' ? getMonthKey(job.date)===filterDateRange.value :
+      filterDateRange.type==='year'  ? getYearKey(job.date)===filterDateRange.value : true
+    );
+    return matchType && matchSearch && matchDate;
+  });
+
+  // Sort by date
+  filtered.sort((a,b) => sortOrder==='desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
+
+  const countEl = document.getElementById('resultsCount');
+  if(filtered.length !== jobs.length) countEl.textContent = `נמצאו ${filtered.length} מתוך ${jobs.length} רשומות`;
+  else countEl.textContent = `${jobs.length} רשומות`;
+
+  if(filtered.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">לא נמצאו רשומות</div></div>';return;}
+
+  el.innerHTML=filtered.map(job=>`
+    <div class="job-card" style="border:1px solid ${job.workType==='company'?'rgba(68,138,255,0.3)':'rgba(244,160,48,0.3)'}">
+      <div class="job-badge ${job.workType}">${job.workType==='company'?'🏢 חברה':'👩 פרטי'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:4px">
+        <div><div class="job-name">${job.clientName}</div><div class="job-meta">${job.date}${job.location?' • '+job.location:''}</div></div>
+        <div style="text-align:left;margin-top:20px"><div class="job-price">₪${totalPrice(job).toFixed(0)}</div>${(job.travel>0||job.lashesPrice>0)?'<div class="job-price-note">כולל תוספות</div>':''}</div>
+      </div>
+      <div class="job-tags">
+        ${job.makeup?'<span class="tag">💄 איפור</span>':''}
+        ${job.hair?'<span class="tag">💇 שיער</span>':''}
+        ${job.lashes?`<span class="tag">✨ ריסים${job.lashesPrice?' ₪'+job.lashesPrice:''}</span>`:''}
+      </div>
+      ${job.notes?`<div class="job-notes">${job.notes}</div>`:''}
+      <div class="job-actions">
+        <button class="btn-edit" onclick="startEdit(${job.id})">✏️ עריכה</button>
+        <button class="btn-del" onclick="askDelete(${job.id})">🗑️ מחיקה</button>
+      </div>
+    </div>`).join('');
+}
+
+function getMonthKey(d){return d.slice(0,7);}
+function getYearKey(d){return d.slice(0,4);}
+function hebrewMonth(mk){const[year,month]=mk.split('-');const months=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];return months[parseInt(month)-1]+' '+year;}
+
+function calcMonthlyData(jobsArr) {
+  const data={};
+  jobsArr.forEach(job=>{
+    const mk=getMonthKey(job.date);
+    if(!data[mk])data[mk]={private:0,company:0,lashes:0,privateCount:0,companyCount:0,lashesCount:0};
+    const price=parseFloat(job.price)||0, travel=parseFloat(job.travel)||0, lashesPrice=parseFloat(job.lashesPrice)||0, base=price+travel;
+    if(job.workType==='private'){data[mk].private+=base;data[mk].privateCount++;}
+    else{data[mk].company+=base;data[mk].companyCount++;}
+    if(job.lashes&&lashesPrice>0){data[mk].lashes+=lashesPrice;data[mk].lashesCount++;data[mk].private+=lashesPrice;}
+  });
+  return data;
+}
+
+function renderSummary() {
+  const monthlyData=calcMonthlyData(jobs);
+  const sortedMonths=Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a));
+  const el=document.getElementById('summaryContent');
+  if(sortedMonths.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">אין נתונים לסיכום</div></div>';return;}
+  el.innerHTML=sortedMonths.map(mk=>{
+    const d=monthlyData[mk], grandTotal=d.private+d.company;
+    return `<div class="summary-card">
+      <div class="summary-month">📅 ${hebrewMonth(mk)}</div>
+      <div class="summary-boxes">
+        <div class="summary-box clickable-box" style="background:rgba(244,160,48,0.15);border:1px solid rgba(244,160,48,0.3)" onclick="drillDown('month','${mk}','private','${hebrewMonth(mk)}')">
+          <div class="summary-box-label" style="color:#f4c07a">👩 פרטיות (כולל ריסים)</div>
+          <div class="summary-box-amount" style="color:#f4a030">₪${d.private.toFixed(0)}</div>
+          <div class="summary-box-count">${d.privateCount} עבודות</div>
+          <div class="drill-hint" style="color:#f4c07a">לחץ לצפייה ברשומות ▶</div>
+        </div>
+        <div class="summary-box clickable-box" style="background:rgba(68,138,255,0.15);border:1px solid rgba(68,138,255,0.3)" onclick="drillDown('month','${mk}','company','${hebrewMonth(mk)}')">
+          <div class="summary-box-label" style="color:#b0d0ff">🏢 חברה</div>
+          <div class="summary-box-amount" style="color:#448aff">₪${d.company.toFixed(0)}</div>
+          <div class="summary-box-count">${d.companyCount} עבודות</div>
+          <div class="drill-hint" style="color:#b0d0ff">לחץ לצפייה ברשומות ▶</div>
+        </div>
+      </div>
+      ${d.lashes>0?`<div class="summary-lashes-row"><div><div style="font-size:11px;color:#ffe082;margin-bottom:3px">✨ מתוך פרטיות — ריסים בלבד</div><div style="font-size:11px;color:#aaa">${d.lashesCount} עבודות ריסים</div></div><div style="font-weight:800;font-size:17px;color:#ffe082">₪${d.lashes.toFixed(0)}</div></div>`:''}
+      <div class="summary-total-box">
+        <div class="summary-total-row"><span style="font-weight:700;color:#f4c07a">סה"כ החודש</span><span style="font-weight:900;font-size:21px">₪${grandTotal.toFixed(0)}</span></div>
+        ${d.lashes>0?`<div class="summary-total-sub"><span style="font-size:12px;color:#aaa">מתוכם ריסים</span><span style="font-size:14px;font-weight:700;color:#ffe082">₪${d.lashes.toFixed(0)}</span></div>`:''}
+      </div>
+      <div class="export-btns no-print">
+        <button class="btn-excel" onclick="exportMonthExcel('${mk}')">📊 ייצא Excel</button>
+        <button class="btn-pdf" onclick="exportMonthPDF('${mk}')">📄 ייצא PDF</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---- YEARLY ----
+let selectedYear = new Date().getFullYear().toString();
+
+function renderYearly() {
+  const years = [...new Set(jobs.map(j=>getYearKey(j.date)))].sort((a,b)=>b.localeCompare(a));
+  const el = document.getElementById('yearlyContent');
+  if(years.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">אין נתונים לסיכום שנתי</div></div>';return;}
+  if(!years.includes(selectedYear)) selectedYear = years[0];
+
+  const yearSelector = `<div class="year-selector">${years.map(y=>`<button class="year-btn ${y===selectedYear?'active':''}" onclick="selectYear('${y}')">${y}</button>`).join('')}</div>`;
+
+  const yearJobs = jobs.filter(j=>getYearKey(j.date)===selectedYear);
+  const monthlyData = calcMonthlyData(yearJobs);
+  const sortedMonths = Object.keys(monthlyData).sort((a,b)=>a.localeCompare(b));
+
+  let totalPrivate=0, totalCompany=0, totalLashes=0, totalJobs=0;
+  sortedMonths.forEach(mk=>{
+    const d=monthlyData[mk];
+    totalPrivate+=d.private; totalCompany+=d.company; totalLashes+=d.lashes; totalJobs+=d.privateCount+d.companyCount;
+  });
+  const grandTotal = totalPrivate+totalCompany;
+
+  const yearSummary = `
+    <div class="year-header">
+      <div><div style="font-size:13px;opacity:0.85;margin-bottom:4px">📈 סיכום שנתי</div><div class="year-title">${selectedYear}</div><div style="font-size:12px;opacity:0.8;margin-top:4px">${totalJobs} עבודות סה"כ</div></div>
+      <div style="text-align:left"><div style="font-size:12px;opacity:0.85;margin-bottom:4px">סה"כ הכנסות</div><div class="year-total">₪${grandTotal.toFixed(0)}</div></div>
+    </div>
+    <div class="year-boxes" style="margin-bottom:12px">
+      <div class="year-box clickable-box" style="background:rgba(244,160,48,0.15);border:1px solid rgba(244,160,48,0.3)" onclick="drillDown('year','${selectedYear}','private','${selectedYear}')">
+        <div style="font-size:11px;color:#f4c07a;margin-bottom:4px">👩 פרטיות (כולל ריסים)</div>
+        <div style="font-weight:800;font-size:19px;color:#f4a030">₪${totalPrivate.toFixed(0)}</div>
+        <div class="drill-hint" style="color:#f4c07a">לחץ לצפייה ▶</div>
+      </div>
+      <div class="year-box clickable-box" style="background:rgba(68,138,255,0.15);border:1px solid rgba(68,138,255,0.3)" onclick="drillDown('year','${selectedYear}','company','${selectedYear}')">
+        <div style="font-size:11px;color:#b0d0ff;margin-bottom:4px">🏢 חברה</div>
+        <div style="font-weight:800;font-size:19px;color:#448aff">₪${totalCompany.toFixed(0)}</div>
+        <div class="drill-hint" style="color:#b0d0ff">לחץ לצפייה ▶</div>
+      </div>
+      ${totalLashes>0?`<div class="year-box" style="background:rgba(255,224,130,0.1);border:1px solid rgba(255,224,130,0.25)"><div style="font-size:11px;color:#ffe082;margin-bottom:4px">✨ ריסים</div><div style="font-weight:800;font-size:19px;color:#ffe082">₪${totalLashes.toFixed(0)}</div></div>`:''}
+    </div>
+    <div class="export-btns no-print" style="margin-bottom:14px">
+      <button class="btn-excel" onclick="exportYearExcel('${selectedYear}')">📊 ייצא Excel שנתי</button>
+      <button class="btn-pdf" onclick="exportYearPDF('${selectedYear}')">📄 ייצא PDF שנתי</button>
+    </div>`;
+
+  // Monthly breakdown for the year
+  const monthlyRows = sortedMonths.map(mk=>{
+    const d=monthlyData[mk], total=d.private+d.company;
+    return `<div class="summary-card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;font-size:15px">📅 ${hebrewMonth(mk)}</div>
+        <div style="font-weight:900;font-size:17px;color:#f4a030">₪${total.toFixed(0)}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="clickable-box" style="flex:1;min-width:90px;background:rgba(244,160,48,0.1);border-radius:8px;padding:8px;border:1px solid rgba(244,160,48,0.2)" onclick="drillDown('month','${mk}','private','${hebrewMonth(mk)}')">
+          <div style="font-size:10px;color:#f4c07a">👩 פרטי</div>
+          <div style="font-weight:700;color:#f4a030">₪${d.private.toFixed(0)}</div>
+          <div class="drill-hint" style="color:#f4c07a">▶</div>
+        </div>
+        <div class="clickable-box" style="flex:1;min-width:90px;background:rgba(68,138,255,0.1);border-radius:8px;padding:8px;border:1px solid rgba(68,138,255,0.2)" onclick="drillDown('month','${mk}','company','${hebrewMonth(mk)}')">
+          <div style="font-size:10px;color:#b0d0ff">🏢 חברה</div>
+          <div style="font-weight:700;color:#448aff">₪${d.company.toFixed(0)}</div>
+          <div class="drill-hint" style="color:#b0d0ff">▶</div>
+        </div>
+        ${d.lashes>0?`<div style="flex:1;min-width:90px;background:rgba(255,224,130,0.08);border-radius:8px;padding:8px;border:1px solid rgba(255,224,130,0.2)"><div style="font-size:10px;color:#ffe082">✨ ריסים</div><div style="font-weight:700;color:#ffe082">₪${d.lashes.toFixed(0)}</div></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = yearSelector + yearSummary + monthlyRows;
+}
+
+function selectYear(y) { selectedYear=y; renderYearly(); }
+
+// ---- EXCEL EXPORT ----
+function buildMonthRows(mk) {
+  const monthJobs = jobs.filter(j=>getMonthKey(j.date)===mk);
+  const rows = [['תאריך','לקוח','מיקום','סוג','איפור','שיער','ריסים','מחיר ריסים','מחיר','נסיעות','סה"כ','הערות']];
+  monthJobs.forEach(j=>{
+    rows.push([j.date,j.clientName,j.location||'',j.workType==='company'?'חברה':'פרטי',j.makeup?'✓':'',j.hair?'✓':'',j.lashes?'✓':'',parseFloat(j.lashesPrice)||0,parseFloat(j.price)||0,parseFloat(j.travel)||0,totalPrice(j),j.notes||'']);
+  });
+  const d=calcMonthlyData(monthJobs)[mk]||{private:0,company:0,lashes:0};
+  rows.push([]);
+  rows.push(['','','','','','','','','סה"כ פרטי','','₪'+d.private.toFixed(0),'']);
+  rows.push(['','','','','','','','','סה"כ חברה','','₪'+d.company.toFixed(0),'']);
+  if(d.lashes>0) rows.push(['','','','','','','','','סה"כ ריסים','','₪'+d.lashes.toFixed(0),'']);
+  rows.push(['','','','','','','','','סה"כ כולל','','₪'+(d.private+d.company).toFixed(0),'']);
+  return rows;
+}
+
+function exportMonthExcel(mk) {
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(buildMonthRows(mk));
+  ws['!cols']=[{wch:12},{wch:18},{wch:16},{wch:8},{wch:6},{wch:6},{wch:6},{wch:12},{wch:10},{wch:10},{wch:10},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,hebrewMonth(mk).replace(' ','_'));
+  XLSX.writeFile(wb,'סיכום_'+mk+'.xlsx');
+}
+
+function exportYearExcel(year) {
+  const wb=XLSX.utils.book_new();
+  const yearJobs=jobs.filter(j=>getYearKey(j.date)===year);
+  const months=[...new Set(yearJobs.map(j=>getMonthKey(j.date)))].sort();
+
+  // Summary sheet
+  const sumRows=[['חודש','פרטיות (כולל ריסים)','חברה','ריסים בלבד','סה"כ']];
+  let tp=0,tc=0,tl=0;
+  const md=calcMonthlyData(yearJobs);
+  months.forEach(mk=>{
+    const d=md[mk]||{};
+    const total=(d.private||0)+(d.company||0);
+    sumRows.push([hebrewMonth(mk),d.private||0,d.company||0,d.lashes||0,total]);
+    tp+=d.private||0; tc+=d.company||0; tl+=d.lashes||0;
+  });
+  sumRows.push(['סה"כ שנתי',tp,tc,tl,tp+tc]);
+  const sumWs=XLSX.utils.aoa_to_sheet(sumRows);
+  sumWs['!cols']=[{wch:16},{wch:20},{wch:12},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,sumWs,'סיכום '+year);
+
+  // Monthly detail sheets
+  months.forEach(mk=>{
+    const ws=XLSX.utils.aoa_to_sheet(buildMonthRows(mk));
+    ws['!cols']=[{wch:12},{wch:18},{wch:16},{wch:8},{wch:6},{wch:6},{wch:6},{wch:12},{wch:10},{wch:10},{wch:10},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,ws,hebrewMonth(mk).replace(' ','_'));
+  });
+  XLSX.writeFile(wb,'דוח_שנתי_'+year+'.xlsx');
+}
+
+// ---- PDF EXPORT ----
+function buildPrintHTML(title, rows) {
+  const headers = rows[0];
+  const dataRows = rows.slice(1);
+  return `
+    <html dir="rtl"><head><meta charset="UTF-8">
+    <style>
+      body{font-family:Arial,sans-serif;padding:20px;direction:rtl;font-size:12px;}
+      h2{margin-bottom:14px;color:#333;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      th{background:#f4a030;color:white;padding:7px 5px;text-align:right;font-size:11px;}
+      td{padding:6px 5px;border-bottom:1px solid #eee;text-align:right;}
+      tr:nth-child(even){background:#fdf6ec;}
+      .total-row td{font-weight:bold;background:#fff8ed;border-top:2px solid #f4a030;}
+    </style></head><body>
+    <h2>${title}</h2>
+    <table>
+      <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${dataRows.map(row=>`<tr>${row.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>
+    </body></html>`;
+}
+
+function exportMonthPDF(mk) {
+  const rows = buildMonthRows(mk);
+  const w = window.open('','_blank');
+  w.document.write(buildPrintHTML('סיכום חודשי — '+hebrewMonth(mk), rows));
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(), 500);
+}
+
+function exportYearPDF(year) {
+  const yearJobs=jobs.filter(j=>getYearKey(j.date)===year);
+  const months=[...new Set(yearJobs.map(j=>getMonthKey(j.date)))].sort();
+  const md=calcMonthlyData(yearJobs);
+  const sumRows=[['חודש','פרטיות (כולל ריסים)','חברה','ריסים בלבד','סה"כ']];
+  let tp=0,tc=0,tl=0;
+  months.forEach(mk=>{
+    const d=md[mk]||{};
+    const total=(d.private||0)+(d.company||0);
+    sumRows.push([hebrewMonth(mk),'₪'+(d.private||0).toFixed(0),'₪'+(d.company||0).toFixed(0),'₪'+(d.lashes||0).toFixed(0),'₪'+total.toFixed(0)]);
+    tp+=d.private||0; tc+=d.company||0; tl+=d.lashes||0;
+  });
+  sumRows.push(['סה"כ שנתי','₪'+tp.toFixed(0),'₪'+tc.toFixed(0),'₪'+tl.toFixed(0),'₪'+(tp+tc).toFixed(0)]);
+  const w=window.open('','_blank');
+  w.document.write(buildPrintHTML('דוח שנתי — '+year, sumRows));
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),500);
+}
+
+// ---- BACKUP / RESTORE ----
+function updateBackupInfo() {
+  const el = document.getElementById('backupCount');
+  if(el) el.textContent = jobs.length;
+  updateLastBackupInfo();
+}
+
+function exportBackup() {
+  if(jobs.length === 0) { alert('אין רשומות לגיבוי'); return; }
+  const data = JSON.stringify({ version:1, exportDate: new Date().toISOString(), jobs }, null, 2);
+  const blob = new Blob([data], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'גיבוי_ניהול_עסק_' + today() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('lastBackupDate', today());
+  updateLastBackupInfo();
+  showBackupMsg('✅ הגיבוי הורד בהצלחה!', '#69f0ae');
+}
+
+function exportAndOpenDrive() {
+  exportBackup();
+  setTimeout(() => {
+    window.open('https://drive.google.com/drive/my-drive', '_blank');
+    showBackupMsg('☁️ גוגל דרייב נפתח — גרור את הקובץ לתוכו ✅', '#82b1ff');
+  }, 1200);
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = data.jobs || (Array.isArray(data) ? data : null);
+      if(!imported) { alert('קובץ לא תקין'); return; }
+      if(!confirm('נמצאו ' + imported.length + ' רשומות בקובץ הגיבוי.\nהאם לטעון אותן?')) return;
+      const existingIds = new Set(jobs.map(j=>j.id));
+      const newJobs = imported.filter(j=>!existingIds.has(j.id));
+      jobs = [...newJobs, ...jobs];
+      saveJobs();
+      updateBackupInfo();
+      updateNavLabel();
+      showBackupMsg('✅ יובאו ' + newJobs.length + ' רשומות חדשות!', '#69f0ae');
+    } catch(err) { alert('שגיאה בקריאת הקובץ'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function saveAutoBackupSetting() {
+  const days = parseInt(document.getElementById('autoBackupDays').value);
+  localStorage.setItem('autoBackupDays', days);
+  updateLastBackupInfo();
+}
+
+function updateLastBackupInfo() {
+  const lastBackup = localStorage.getItem('lastBackupDate');
+  const days = parseInt(localStorage.getItem('autoBackupDays') || '7');
+  const sel = document.getElementById('autoBackupDays');
+  if(sel) sel.value = days;
+  const el = document.getElementById('lastBackupInfo');
+  if(!el) return;
+  if(lastBackup) {
+    const diff = Math.floor((new Date() - new Date(lastBackup)) / (1000*60*60*24));
+    const when = diff === 0 ? 'היום' : 'לפני ' + diff + ' ימים';
+    el.textContent = 'גיבוי אחרון: ' + when + ' (' + lastBackup + ')';
+  } else {
+    el.textContent = 'טרם בוצע גיבוי';
+  }
+}
+
+function checkAutoBackup() {
+  const days = parseInt(localStorage.getItem('autoBackupDays') || '7');
+  if(days === 0 || jobs.length === 0) return;
+  const lastBackup = localStorage.getItem('lastBackupDate');
+  if(!lastBackup) { localStorage.setItem('lastBackupDate', today()); return; }
+  const diff = Math.floor((new Date() - new Date(lastBackup)) / (1000*60*60*24));
+  if(diff >= days) {
+    setTimeout(() => {
+      const doBackup = confirm('⏰ תזכורת גיבוי!\nעברו ' + diff + ' ימים מהגיבוי האחרון.\nיש ' + jobs.length + ' רשומות.\n\nלגבות עכשיו?');
+      if(doBackup) exportBackup();
+    }, 2000);
+  }
+}
+
+function showBackupMsg(msg, color) {
+  const info = document.getElementById('backupInfo');
+  if(info) { info.style.color=color; info.textContent=msg; setTimeout(()=>{ info.style.color=''; updateBackupInfo(); }, 4000); }
+}
+
+function resetAllData() {
+  if(!confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים?\nפעולה זו לא ניתנת לביטול!')) return;
+  exportBackup();
+  setTimeout(() => {
+    jobs = []; saveJobs(); updateBackupInfo(); updateNavLabel();
+    showBackupMsg('🗑️ כל הנתונים נמחקו', '#ff8a80');
+  }, 500);
+}
+function updateBackupInfo() {
+  const el = document.getElementById('backupCount');
+  if(el) el.textContent = jobs.length;
+}
+
+function exportBackup() {
+  if(jobs.length === 0) { alert('אין רשומות לגיבוי'); return; }
+  const data = JSON.stringify({ version: 1, exportDate: new Date().toISOString(), jobs }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'גיבוי_ניהול_עסק_' + today() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showBackupSuccess('✅ הגיבוי הורד בהצלחה!');
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const imported = data.jobs || (Array.isArray(data) ? data : null);
+      if(!imported) { alert('קובץ לא תקין'); return; }
+      if(!confirm(`נמצאו ${imported.length} רשומות בקובץ הגיבוי.\nהאם לטעון אותן? (הרשומות הקיימות ישמרו)`)) return;
+      // Merge — avoid duplicates by id
+      const existingIds = new Set(jobs.map(j=>j.id));
+      const newJobs = imported.filter(j=>!existingIds.has(j.id));
+      jobs = [...newJobs, ...jobs];
+      saveJobs();
+      updateBackupInfo();
+      updateNavLabel();
+      showBackupSuccess(`✅ יובאו ${newJobs.length} רשומות חדשות!`);
+    } catch(err) {
+      alert('שגיאה בקריאת הקובץ');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function resetAllData() {
+  if(!confirm('האם אתה בטוח שברצונך למחוק את כל הנתונים?\nפעולה זו לא ניתנת לביטול!')) return;
+  if(!confirm('אחרון — האם לגבות קודם?\nלחץ ביטול כדי לגבות, אישור כדי למחוק')) {
+    exportBackup();
+    return;
+  }
+  jobs = [];
+  saveJobs();
+  updateBackupInfo();
+  updateNavLabel();
+  showBackupSuccess('🗑️ כל הנתונים נמחקו');
+}
+
+function showBackupSuccess(msg) {
+  const info = document.getElementById('backupInfo');
+  if(info) { info.style.color='#69f0ae'; info.textContent=msg; setTimeout(()=>{ info.style.color=''; updateBackupInfo(); },3000); }
+}
+
+// Init
+document.getElementById('f-date').value=today();
+updateNavLabel();
+checkAutoBackup();
+</script>
+</body>
+</html>
